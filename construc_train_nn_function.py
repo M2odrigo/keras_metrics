@@ -12,6 +12,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+import csv
 
 def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, batch=0):
     indice_capas = np.arange((np.count_nonzero(cant_layers)))
@@ -40,7 +41,14 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
 
         #print('####PREDICTION#####')
         #print(model.predict_proba(X))
-
+        # evaluate the model
+        scores = model.evaluate(X, Y)
+        acc = ("%.2f%%" % (scores[1]*100))
+        row = str(e)+","+str(acc)
+        fields=[str(e),str(acc)]
+        with open('epoch_acc.csv', 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)
         if(e == 0):
             #extraer las activaciones
             for layer in indice_capas:
@@ -127,7 +135,13 @@ def get_activations (cant_nodos, cant_input, weights, activations):
 param_layers = 4
 param_layers = np.arange(1, (int(param_layers)+1))
 #param_epoch = input('cantidad epochs ')
-param_epoch = "0,10, 20"
+param_epoch= ""
+for i in np.arange(0,310,10):
+    if(param_epoch==""):
+        param_epoch = str(i)
+    else:
+        param_epoch = param_epoch + "," + str(i)
+print(param_epoch)
 param_epoch = param_epoch.split(',')
 #cantidad de nodos del input layer
 param_input = 8
