@@ -25,7 +25,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
     desviation_epoch_one = np.array([])
     activations = []
     for e in cant_epoch:
-        np.random.seed(7)
+        #np.random.seed(14)
         e=int(e)
         model = Sequential()
         for layer in indice_capas:
@@ -39,13 +39,21 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
         print("entrenando para ", e, " epochs")
         model.fit(X, Y, epochs=e, batch_size=int(batch))
 
-        #print('####PREDICTION#####')
-        #print(model.predict_proba(X))
+        print('####PREDICTION#####')
+        prediction = model.predict_proba(X_test)
+        for index,p in enumerate(prediction):
+            fields=[str(e),str(p),str(Y_test[index])]
+            with open('prediction.csv', 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow(fields)
+
         # evaluate the model
         scores = model.evaluate(X, Y)
         acc = ("%.2f%%" % (scores[1]*100))
         row = str(e)+","+str(acc)
         fields=[str(e),str(acc)]
+        # 'a' para agregar contenido al CSV
+        # 'wb' para sobre-escribir el archivo CSV
         with open('epoch_acc.csv', 'a') as f:
             writer = csv.writer(f)
             writer.writerow(fields)
@@ -135,12 +143,12 @@ def get_activations (cant_nodos, cant_input, weights, activations):
 param_layers = 4
 param_layers = np.arange(1, (int(param_layers)+1))
 #param_epoch = input('cantidad epochs ')
-param_epoch= ""
-for i in np.arange(0,310,10):
-    if(param_epoch==""):
-        param_epoch = str(i)
-    else:
-        param_epoch = param_epoch + "," + str(i)
+param_epoch= "0,100"
+#for i in np.arange(0,201,100):
+#    if(param_epoch==""):
+#        param_epoch = str(i)
+#    else:
+#        param_epoch = param_epoch + "," + str(i)
 print(param_epoch)
 param_epoch = param_epoch.split(',')
 #cantidad de nodos del input layer
@@ -159,8 +167,12 @@ scaler = StandardScaler()
 X = dataset[:,0:8]
 Y = dataset[:,8]
 
+# load TEST pima indians dataset
+dataset = np.loadtxt("pima-indians-diabetes-test.csv", delimiter=",")
+X_test = dataset[:,0:8]
+Y_test = dataset[:,8]
 #normalizar los valores del train set
-X = scaler.fit_transform(X)
+#X = scaler.fit_transform(X)
 
 construct_train_nn(X, Y, param_input, param_layers, param_nodos, param_epoch, batch_size)
 
