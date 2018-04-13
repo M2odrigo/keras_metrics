@@ -68,10 +68,13 @@ model.add(Activation('softmax'))
 
 # compiling the sequential model
 model.compile(loss='categorical_crossentropy', metrics=['accuracy'], optimizer='adam')
-sum_class_zero = np.array([])
 contador_zero = 0
-param_epoch= "0"
+param_epoch= "0,1"
 param_epoch = param_epoch.split(',')
+param_calses = "0,1,2,3,4,5,6,7,8,9"
+param_calses = param_calses.split(',')
+varianza_epoch_zero = np.array([])
+varianza_classes = np.array([])
 for e in param_epoch: 
     # training the model and saving metrics in history
     history = model.fit(X_train, Y_train,
@@ -94,17 +97,37 @@ for e in param_epoch:
             writer = csv.writer(f)
             writer.writerow(fields)
 
-    
-    calculo_tmp = calc_media(prediction, '0', Y_test)
-    media = calculo_tmp [0]
-    contador = calculo_tmp[1]
-    print("media_function", media, ' cont', contador)
+    for cl in param_calses:
+        cl=str(cl)
+        print("vamos a calcular para la clase ", cl)
+        calculo_tmp = calc_media(prediction, cl, Y_test)
+        media = calculo_tmp [0]
+        contador = calculo_tmp[1]
+        print("media_function", media, ' cont', contador)
 
-    r = get_values_classes(prediction, '0', Y_test)
-    print('r ', r)
+        r = get_values_classes(prediction, cl, Y_test)
+        print('r ', r)
 
-    varianza = calc_varianza(r, media, 0, contador)
-    print('varianza', varianza)
+        varianza = calc_varianza(r, media, cl, contador)
+        print('varianza class ',cl , "equals to: ", varianza)
+        print("epoch : ", e)
+        if(str(e) == '0'):
+            if np.any(varianza_epoch_zero):
+                varianza_epoch_zero= np.append(varianza_epoch_zero, [varianza], axis=0)
+            else:
+                varianza_epoch_zero = [varianza]
+        else:
+            if np.any(varianza_classes):
+                varianza_classes= np.append(varianza_classes, [varianza], axis=0)
+            else:
+                varianza_classes = [varianza]
+
+        print ('varianza_epoch_zero >>>> ', varianza_epoch_zero)
+        print ('varianza_classes >>>> ', varianza_classes)
+
+    print("END")
+    print ('varianza_epoch_zero >>>> ', varianza_epoch_zero)
+    print ('varianza_classes >>>> ', varianza_classes)
  
 
 #print("#########outputs of input layer with 512 nodes#################")
