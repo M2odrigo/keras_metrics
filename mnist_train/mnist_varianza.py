@@ -5,27 +5,27 @@ def calc_varianza (r, media, clase, contador):
     for num in r:
         print('r : ', num )
         #input('')
-        print('vamos a restar cada array en R con la media') 
-        print(" ") 
+        #print('vamos a restar cada array en R con la media') 
+        #print(" ") 
         tmp = np.subtract(media, num) 
-        print(tmp)
-        print('vamos a elevar al cuadrado cada diferencia')  
-        print(" ") 
+        #print(tmp)
+        #print('vamos a elevar al cuadrado cada diferencia')  
+        #print(" ") 
         tmp = np.square(tmp)
-        print(tmp)
-        print('vamos a sumar todos los elementos del array')
-        print(" ") 
+        #print(tmp)
+        #print('vamos a sumar todos los elementos del array')
+        #print(" ") 
         tmp = np.sum(tmp)
-        print(tmp)
-        print('vamos a sacar la raiz cuadrada a partir de la suma')
-        print(" ") 
+        #print(tmp)
+        #print('vamos a sacar la raiz cuadrada a partir de la suma')
+        #print(" ") 
         tmp = np.sqrt(tmp)
-        print(tmp)
-        print('vamos a acumular para el siguiente conjunto de array')
-        print(" ") 
+        #print(tmp)
+        #print('vamos a acumular para el siguiente conjunto de array')
+        #print(" ") 
         sum_tmp = sum_tmp + tmp
     varianza = 0
-    print('sum_tmp', sum_tmp)
+    #print('sum_tmp', sum_tmp)
     if (sum_tmp == 0):
         return varianza    
     varianza = sum_tmp / contador 
@@ -64,8 +64,8 @@ def calc_media (prediction, clase, Y_test):
                 sum_class_zero = np.asarray(r1)
                 #print ("sum", sum_class_zero)
                 
-    print ("sum", sum_class_zero)
-    print ("cont", contador_zero)   
+    print ("sum class ", clase, " == ", sum_class_zero)
+    print ("cont class",clase, " == ", contador_zero)   
     media = np.divide(sum_class_zero, contador_zero)
     return media, contador_zero
 
