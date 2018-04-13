@@ -17,6 +17,10 @@ from keras.models import Sequential, load_model
 from keras.layers.core import Dense, Dropout, Activation
 from keras.utils import np_utils
 
+from mnist_varianza import calc_varianza
+from mnist_varianza import calc_media
+from mnist_varianza import get_values_classes
+
 (X_train, y_train), (X_test, y_test) = mnist.load_data()
 
 # let's print the shape before we reshape and normalize
@@ -90,74 +94,17 @@ for e in param_epoch:
             writer = csv.writer(f)
             writer.writerow(fields)
 
-    print(model.summary())
-    cont = 0
-    print('####PREDICTION#####')
-    #prediction = model.predict_proba(X_test)
-    r=np.array([])
-    for index,p in enumerate(prediction):
-        cont = cont + 1
-        if cont > 50:
-            break
-
-        r1 = [format(x, 'f') for x in p]
-        r1 = [float(x) for x in p]
-
-
-        #print(np.asarray(r))
-        fields=[e,r1,str(Y_test[index]), str(Y_test[index].argmax())]
-        y = str(Y_test[index].argmax())
-        print(y)
-        if(str(y)==str(0)):
-            if np.any(r):
-                r= np.append(r, [r1], axis=0)
-            else:
-                r = [r1]
-            contador_zero = contador_zero +1
-            if np.any(sum_class_zero):
-                sum_class_zero = np.sum([sum_class_zero, np.asarray(r1)], axis=0)
-            else:
-                sum_class_zero = np.asarray(r1)
-            #print ("sum", sum_class_zero)
-            
-    print ("sum", sum_class_zero)
-    print ("cont", contador_zero)   
-    media = np.divide(sum_class_zero, contador_zero)
-    print ("media", media)
-    print("r >>>", r)
-    input('')
-    sum_tmp = 0
-    for num in r:
-        print('r : ', num )
-        #input('')
-        print('vamos a restar cada array en R con la media') 
-        print(" ") 
-        tmp = np.subtract(media, num) 
-        print(tmp)
-        print('vamos a elevar al cuadrado cada diferencia')  
-        print(" ") 
-        tmp = np.square(tmp)
-        print(tmp)
-        print('vamos a sumar todos los elementos del array')
-        print(" ") 
-        tmp = np.sum(tmp)
-        print(tmp)
-        print('vamos a sacar la raiz cuadrada a partir de la suma')
-        print(" ") 
-        tmp = np.sqrt(tmp)
-        print(tmp)
-        print('vamos a acumular para el siguiente conjunto de array')
-        print(" ") 
-        sum_tmp = sum_tmp + tmp
-
     
-    varianza = 0
-    print('sum_tmp', sum_tmp)
-    if (sum_tmp == 0):
-        print ("Varianza es null, calculo salio zero = ", varianza)    
-    else:
-        varianza = sum_tmp / contador_zero 
-        print('varianza = ', varianza)
+    calculo_tmp = calc_media(prediction, '0', Y_test)
+    media = calculo_tmp [0]
+    contador = calculo_tmp[1]
+    print("media_function", media, ' cont', contador)
+
+    r = get_values_classes(prediction, '0', Y_test)
+    print('r ', r)
+
+    varianza = calc_varianza(r, media, 0, contador)
+    print('varianza', varianza)
  
 
 #print("#########outputs of input layer with 512 nodes#################")
