@@ -69,12 +69,14 @@ model.add(Activation('softmax'))
 # compiling the sequential model
 model.compile(loss='categorical_crossentropy', metrics=['accuracy'], optimizer='adam')
 contador_zero = 0
-param_epoch= "0,1"
+param_epoch= "0,1,2"
 param_epoch = param_epoch.split(',')
 param_calses = "0,1,2,3,4,5,6,7,8,9"
 param_calses = param_calses.split(',')
 varianza_epoch_zero = np.array([])
 varianza_classes = np.array([])
+list_varianzas = []
+list_metrics = []
 for e in param_epoch: 
     # training the model and saving metrics in history
     history = model.fit(X_train, Y_train,
@@ -117,32 +119,28 @@ for e in param_epoch:
             else:
                 varianza_epoch_zero = [varianza]
         else:
-            if np.any(varianza_classes):
-                varianza_classes= np.append(varianza_classes, [varianza], axis=0)
-            else:
-                varianza_classes = [varianza]
+            list_varianzas.append([varianza])
+            #if np.any(varianza_classes):
+            #    varianza_classes= np.append(varianza_classes, [varianza], axis=0)
+            #else:
+             #   varianza_classes = np.array([varianza])
 
+        varianza_classes = np.asarray(list_varianzas)
         print ('varianza_epoch_zero >>>> ', varianza_epoch_zero)
         print ('varianza_classes >>>> ', varianza_classes)
 
     print("END")
     print ('varianza_epoch_zero >>>> ', varianza_epoch_zero)
     print ('varianza_classes >>>> ', varianza_classes)
- 
-
-#print("#########outputs of input layer with 512 nodes#################")
-#model2 = Sequential()
-#model2.add(Dense(512, input_shape=(784,), weights=model.layers[0].get_weights(), activation='relu'))
-#model2.add(Dropout(0.2))
-#activations = model2.predict(X_test)
-#print(activations)
-
-#a = np.asarray(activations)
-
-#roundnumpy = np.round(activations, 5)
-
-#arra = np.asarray(activations)
-#a = np.array_str(arra, precision=4)
-
-#np.savetxt("512nodes_batch_100_epoch_5_round.csv", a, fmt = '%.5f', delimiter=",")
+tmpv = np.reshape(varianza_classes, (-1, 10))
+print ('varianza_classes >>>> ', tmpv)
+varianza_classes = tmpv
+for index, v in enumerate(varianza_classes): 
+    print('v : ', varianza_classes[index])
+    print('varianza_epoch_zero : ', varianza_epoch_zero)
+    metric = np.divide(varianza_classes[index], varianza_epoch_zero)
+    list_metrics.append([metric])
+#metrics = np.divide(varianza_classes, varianza_epoch_zero)
+list_metrics = np.reshape(list_metrics, (-1, 10))
+print('list metrics ',list_metrics)
 
