@@ -42,7 +42,7 @@ def calc_media (prediction, clase, Y_test):
     #input('')
     for index,p in enumerate(prediction):
         cont = cont + 1
-        if cont > 50:
+        if cont > 5000:
             break
 
         r1 = [format(x, 'f') for x in p]
@@ -74,7 +74,7 @@ def get_values_classes (prediction, clase, Y_test):
     cont = 0
     for index,p in enumerate(prediction):
         cont = cont + 1
-        if cont > 50:
+        if cont > 5000:
             break
 
         r1 = [format(x, 'f') for x in p]
