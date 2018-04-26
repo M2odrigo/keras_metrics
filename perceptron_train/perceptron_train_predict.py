@@ -41,6 +41,7 @@ def cross_validation_split(dataset, n_folds):
 			index = randrange(len(dataset_copy))
 			fold.append(dataset_copy.pop(index))
 		dataset_split.append(fold)
+	print (len(dataset_split))
 	return dataset_split
 
 # Calculate accuracy percentage
@@ -81,12 +82,16 @@ def predict(row, weights):
 def train_weights(train, l_rate, n_epoch):
 	weights = [0.0 for i in range(len(train[0]))]
 	for epoch in range(n_epoch):
+		sum_error = 0.0
 		for row in train:
 			prediction = predict(row, weights)
 			error = row[-1] - prediction
+			#print("row: ",row[-1], " predicted: ", prediction)
+			sum_error += error**2
 			weights[0] = weights[0] + l_rate * error
 			for i in range(len(row)-1):
 				weights[i + 1] = weights[i + 1] + l_rate * error * row[i]
+		print('>epoch=%d, lrate=%.3f, error=%.3f' % (epoch, l_rate, sum_error))
 	return weights
 
 # Perceptron Algorithm With Stochastic Gradient Descent
@@ -108,9 +113,9 @@ for i in range(len(dataset[0])-1):
 # convert string class to integers
 str_column_to_int(dataset, len(dataset[0])-1)
 # evaluate algorithm
-n_folds = 3
+n_folds = 2  #originalmete estaba en 3
 l_rate = 0.01
-n_epoch = 50
+n_epoch = 5
 scores = evaluate_algorithm(dataset, perceptron, n_folds, l_rate, n_epoch)
 print('Scores: %s' % scores)
 print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
