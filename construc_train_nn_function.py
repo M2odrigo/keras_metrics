@@ -35,6 +35,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
                 model.add(Dense(int(cant_nodos[layer]), activation='sigmoid'))
 
         print("Configuracion de la red: ", model.summary())
+
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         print("entrenando para ", e, " epochs")
         model.fit(X, Y, epochs=e, batch_size=int(batch))
@@ -66,6 +67,11 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
                 print("cant input: ", cant_input)
                 if layer==0:
                     activations = get_activations(int(cant_nodos[layer]), cant_input, model.layers[layer].get_weights(), X)
+                    print('###############')
+                    print(activations)
+                    print("activation> ", activations.shape)
+                    print("Y> ", Y.shape)
+                    save_activation (e, cant_nodos[layer], activations, Y)
                     desviation = calc_metric(layer, int(cant_nodos[layer]), activations, Y)
                     initial_desviation_zero = desviation[0]
                     initial_desviation_one = desviation[1]
@@ -74,6 +80,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
                         
                     activations_layers = get_activations(int(cant_nodos[layer]), int(cant_nodos[layer-1]), model.layers[layer].get_weights(), activations)
                     activations = activations_layers
+                    save_activation (e, cant_nodos[layer], activations, Y)
                     desviation = calc_metric(layer, int(cant_nodos[layer]), activations_layers, Y)
                     initial_desviation_zero = np.concatenate((initial_desviation_zero, desviation[0]))
                     initial_desviation_one = np.concatenate((initial_desviation_one, desviation[1]))
@@ -90,6 +97,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
                 print("cant input: ", cant_input)
                 if layer==0:
                     activations = get_activations(int(cant_nodos[layer]), cant_input, model.layers[layer].get_weights(), X)
+                    save_activation (e, cant_nodos[layer], activations, Y)
                     desviation = calc_metric(layer, int(cant_nodos[layer]), activations, Y)
                     desviation_epoch_zero = desviation[0]
                     desviation_epoch_one = desviation[1]
@@ -98,6 +106,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
                         
                     activations_layers = get_activations(int(cant_nodos[layer]), int(cant_nodos[layer-1]), model.layers[layer].get_weights(), activations)
                     activations = activations_layers
+                    save_activation (e, cant_nodos[layer], activations, Y)
                     desviation = calc_metric(layer, int(cant_nodos[layer]), activations_layers, Y)
                     desviation_epoch_zero = np.concatenate((desviation_epoch_zero, desviation[0]))
                     desviation_epoch_one = np.concatenate((desviation_epoch_one, desviation[1]))
@@ -140,10 +149,22 @@ def get_activations (cant_nodos, cant_input, weights, activations):
     activations_array = np.asarray(activations)
     return activations_array
 
+def save_activation (e, cant_nodos, activations, Y):
+    print("epoch ", e, "cant nodos: ", cant_nodos, "activation shape: ", activations.shape)
+    print(activations)
+    for index, activ in enumerate(Y):
+        r2 = ['{:f}'.format(x) for x in activations[index]]
+        fields=[r2, Y[index]]
+        with open('activations.csv', 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)
+    input('continue?')
+    
+
 param_layers = 4
 param_layers = np.arange(1, (int(param_layers)+1))
 #param_epoch = input('cantidad epochs ')
-param_epoch= "0,100"
+param_epoch= "0"
 #for i in np.arange(0,201,100):
 #    if(param_epoch==""):
 #        param_epoch = str(i)
@@ -155,6 +176,7 @@ param_epoch = param_epoch.split(',')
 param_input = 8
 #cantidad de nodos por cada capa, array de nodos
 param_nodos = "12,8,8,1"
+#param_nodos = "12"
 param_nodos = param_nodos.split(',')
 ##variables
 batch_size = 100
