@@ -7,7 +7,8 @@
 ##cant_epoch array con los epochs que realizara
 ##batch es opcional, establece de a cuantos lotes se leera el conjunto de entrada X
 from desviation_function import calc_metric
-from perceptron_function import train_perceptron
+from split_function import split
+from sgd_perceptron import perceptron_plot
 from graph_metric_function import graph_metric
 from keras.models import Sequential
 from keras.layers import Dense
@@ -17,6 +18,8 @@ import csv
 import os
 
 def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, batch=0):
+    if os.path.isfile('hidden_perceptron_error.csv'):
+        os.remove('hidden_perceptron_error.csv')
     indice_capas = np.arange((np.count_nonzero(cant_layers)))
     print("recibimos capas ", indice_capas)
     metric_zero=np.array([])
@@ -57,9 +60,9 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
         fields=[str(e),str(acc)]
         # 'a' para agregar contenido al CSV
         # 'wb' para sobre-escribir el archivo CSV
-        #with open('epoch_acc.csv', 'a') as f:
-        #    writer = csv.writer(f)
-        #    writer.writerow(fields)
+        with open('epoch_acc.csv', 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)
         if(e == 0):
             #extraer las activaciones
             for layer in indice_capas:
@@ -73,7 +76,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
                     print(activations)
                     print("activation> ", activations.shape)
                     print("Y> ", Y.shape)
-                    save_activation (e, cant_nodos[layer], activations, Y, layer)
+                    save_activation (e, cant_nodos[layer], activations, Y, layer, indice_capas[-1])
                     desviation = calc_metric(layer, int(cant_nodos[layer]), activations, Y)
                     initial_desviation_zero = desviation[0]
                     initial_desviation_one = desviation[1]
@@ -82,7 +85,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
                         
                     activations_layers = get_activations(int(cant_nodos[layer]), int(cant_nodos[layer-1]), model.layers[layer].get_weights(), activations)
                     activations = activations_layers
-                    save_activation (e, cant_nodos[layer], activations, Y, layer)
+                    save_activation (e, cant_nodos[layer], activations, Y, layer, indice_capas[-1])
                     desviation = calc_metric(layer, int(cant_nodos[layer]), activations_layers, Y)
                     initial_desviation_zero = np.concatenate((initial_desviation_zero, desviation[0]))
                     initial_desviation_one = np.concatenate((initial_desviation_one, desviation[1]))
@@ -99,7 +102,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
                 print("cant input: ", cant_input)
                 if layer==0:
                     activations = get_activations(int(cant_nodos[layer]), cant_input, model.layers[layer].get_weights(), X)
-                    save_activation (e, cant_nodos[layer], activations, Y, layer)
+                    save_activation (e, cant_nodos[layer], activations, Y, layer, indice_capas[-1])
                     desviation = calc_metric(layer, int(cant_nodos[layer]), activations, Y)
                     desviation_epoch_zero = desviation[0]
                     desviation_epoch_one = desviation[1]
@@ -108,7 +111,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
                         
                     activations_layers = get_activations(int(cant_nodos[layer]), int(cant_nodos[layer-1]), model.layers[layer].get_weights(), activations)
                     activations = activations_layers
-                    save_activation (e, cant_nodos[layer], activations, Y, layer)
+                    save_activation (e, cant_nodos[layer], activations, Y, layer, indice_capas[-1])
                     desviation = calc_metric(layer, int(cant_nodos[layer]), activations_layers, Y)
                     desviation_epoch_zero = np.concatenate((desviation_epoch_zero, desviation[0]))
                     desviation_epoch_one = np.concatenate((desviation_epoch_one, desviation[1]))
@@ -151,38 +154,47 @@ def get_activations (cant_nodos, cant_input, weights, activations):
     activations_array = np.asarray(activations)
     return activations_array
 
-def save_activation (e, cant_nodos, activations, Y, layer):
-    print("epoch ", e, "cant nodos: ", cant_nodos, "activation shape: ", activations.shape)
-    #print(activations)
-    if os.path.isfile('hidden_'+str(layer) +'_activations.csv'):
-        os.remove('hidden_'+str(layer) +'_activations.csv')
-    for index, activ in enumerate(Y):
-        r2 = ['{:f}'.format(x) for x in activations[index]]
-        fields=[r2, Y[index]]
-        with open('hidden_'+str(layer) +'_activations.csv', 'a') as f:
-            writer = csv.writer(f)
-            writer.writerow(fields)
+def save_activation (e, cant_nodos, activations, Y, layer, last_layer):
+    if(layer != last_layer):
+        print("epoch ", e, "cant nodos: ", cant_nodos, "activation shape: ", activations.shape)
+        #print(activations)
+        if os.path.isfile('hidden_'+str(layer) +'_activations.csv'):
+            os.remove('hidden_'+str(layer) +'_activations.csv')
+        for index, activ in enumerate(Y):
+            r2 = ['{:f}'.format(x) for x in activations[index]]
+            fields=[r2, Y[index]]
+            with open('hidden_'+str(layer) +'_activations.csv', 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow(fields)
 
-    # Read in the file
-    with open('hidden_'+str(layer) +'_activations.csv', 'r') as file :
-        filedata = file.read()
-        # Replace the target string
-        filedata = filedata.replace('[', '')
-        filedata = filedata.replace(']', '')
-        filedata = filedata.replace('"', '')
-        filedata = filedata.replace('\'', '')
-    # Write the file out again
-    with open('hidden_'+str(layer) +'_activations.csv', 'w') as file:
-        file.write(filedata)
-    
-    train_perceptron('hidden_'+str(layer) +'_activations.csv', str(layer), str(e))
-    #input('continue?') 
+        # Read in the file
+        with open('hidden_'+str(layer) +'_activations.csv', 'r') as file :
+            filedata = file.read()
+            # Replace the target string
+            filedata = filedata.replace('[', '')
+            filedata = filedata.replace(']', '')
+            filedata = filedata.replace('"', '')
+            filedata = filedata.replace('\'', '')
+        # Write the file out again
+        with open('hidden_'+str(layer) +'_activations.csv', 'w') as file:
+            file.write(filedata)
+        
+        split(open('hidden_'+str(layer) +'_activations.csv', 'r'));
+        filename1 = 'output_1.csv'
+        filename2 = 'output_2.csv'
+        perceptron_plot(filename1, layer, e,cant_nodos)
+        perceptron_plot(filename2, layer, e,cant_nodos)
+        #input('continue?') 
+    else:
+        print("capa actual " + str(layer))
+        print("capa final " + str(last_layer))
+        print("llegamos al output layer")
 
 nro_capa = 1  
 param_layers = 4
 param_layers = np.arange(1, (int(param_layers)+1))
 #param_epoch = input('cantidad epochs ')
-param_epoch= "0,100,200"
+param_epoch= "0,200"
 #for i in np.arange(0,201,100):
 #    if(param_epoch==""):
 #        param_epoch = str(i)
