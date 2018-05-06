@@ -42,7 +42,7 @@ def perceptron_plot(filename, layer, e, cant_input):
     #print(mala_clasif)
     #input('this_?')
     #fields=[layer, e, str(cont_total_input),np.amin(mala_clasif), mala_clasif]
-    mn,idx = min( (mala_clasif[i],i) for i in range(len(mala_clasif)) )
+    mn,idx = min((mala_clasif[i],i) for i in range(len(mala_clasif)))
     fields=[layer, e, str(cont_total_input),mn, idx]
     with open('hidden_perceptron_error.csv', 'a') as f:
         writer = csv.writer(f)
