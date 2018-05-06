@@ -194,7 +194,7 @@ nro_capa = 1
 param_layers = 4
 param_layers = np.arange(1, (int(param_layers)+1))
 #param_epoch = input('cantidad epochs ')
-param_epoch= "0,200"
+param_epoch= "0,200,1200"
 #for i in np.arange(0,201,100):
 #    if(param_epoch==""):
 #        param_epoch = str(i)
@@ -224,6 +224,6 @@ dataset = np.loadtxt("pima-indians-diabetes-test.csv", delimiter=",")
 X_test = dataset[:,0:8]
 Y_test = dataset[:,8]
 #normalizar los valores del train set
-#X = scaler.fit_transform(X)
+X = scaler.fit_transform(X)
 construct_train_nn(X, Y, param_input, param_layers, param_nodos, param_epoch, batch_size)
 

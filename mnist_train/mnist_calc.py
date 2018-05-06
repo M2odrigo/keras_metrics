@@ -21,6 +21,17 @@ from mnist_varianza import calc_varianza
 from mnist_varianza import calc_media
 from mnist_varianza import get_values_classes
 
+from graph_metric_function import graph_metric
+
+
+def get_activations (cant_nodos, cant_input, weights, activations):
+    model = Sequential()
+    model.add(Dense(cant_nodos, input_dim=cant_input, weights=weights, activation='sigmoid'))
+    activations = model.predict_proba(activations)
+    activations_array = np.asarray(activations)
+    return activations_array
+
+
 (X_train, y_train), (X_test, y_test) = mnist.load_data()
 
 # let's print the shape before we reshape and normalize
@@ -54,14 +65,14 @@ print("Shape after one-hot encoding: ", Y_train.shape)
 
 # building a linear stack of layers with the sequential model
 model = Sequential()
-model.add(Dense(512, input_shape=(784,)))
-model.add(Activation('relu'))   
+model.add(Dense(512, input_shape=(784,), activation='relu'))
+#model.add(Activation('relu'))   
 #dropout helps avoid the overfittin by zero-ing some random input in each iteration                         
-model.add(Dropout(0.2))
+#model.add(Dropout(0.2))
 
-model.add(Dense(512))
-model.add(Activation('relu'))
-model.add(Dropout(0.2))
+model.add(Dense(512, activation='relu'))
+#model.add(Activation('relu'))
+#model.add(Dropout(0.2))
 
 model.add(Dense(10))
 model.add(Activation('softmax'))
@@ -69,7 +80,7 @@ model.add(Activation('softmax'))
 # compiling the sequential model
 model.compile(loss='categorical_crossentropy', metrics=['accuracy'], optimizer='adam')
 contador_zero = 0
-param_epoch= "0,1,2"
+param_epoch= "0,1,2,3"
 param_epoch = param_epoch.split(',')
 param_calses = "0,1,2,3,4,5,6,7,8,9"
 param_calses = param_calses.split(',')
@@ -84,16 +95,21 @@ for e in param_epoch:
               verbose=2,
               validation_data=(X_test, Y_test))
 
+    activations1 = get_activations(512, 784, model.layers[0].get_weights(), X_train)
+    activations2 = get_activations(512, 512, model.layers[1].get_weights(), activations1)
+    print('activations2',activations2.shape)
+    print('y train ', Y_train.shape)
 
     cont = 0
     print('####PREDICTION#####')
     prediction = model.predict_proba(X_test)
+    print('prediction ',prediction.shape) 
     for index,p in enumerate(prediction):
         cont = cont + 1
-        if cont > 50:
+        if cont > 5000:
             break
         r2 = [format(x, 'f') for x in p]
-        print("r init " , r2)
+        #print("r init " , r2)
         fields=[e,r2,str(Y_test[index]), str(Y_test[index].argmax())]
         with open('prediction.csv', 'a') as f:
             writer = csv.writer(f)
@@ -102,13 +118,13 @@ for e in param_epoch:
     for cl in param_calses:
         cl=str(cl)
         print("vamos a calcular para la clase ", cl)
-        calculo_tmp = calc_media(prediction, cl, Y_test)
+        calculo_tmp = calc_media(activations2, cl, Y_train)
         media = calculo_tmp [0]
         contador = calculo_tmp[1]
         print("media_function", media, ' cont', contador)
 
-        r = get_values_classes(prediction, cl, Y_test)
-        print('r ', r)
+        r = get_values_classes(activations2, cl, Y_train)
+        #print('r ', r)
 
         varianza = calc_varianza(r, media, cl, contador)
         print('varianza class ',cl , "equals to: ", varianza)
@@ -140,7 +156,24 @@ for index, v in enumerate(varianza_classes):
     print('varianza_epoch_zero : ', varianza_epoch_zero)
     metric = np.divide(varianza_classes[index], varianza_epoch_zero)
     list_metrics.append([metric])
-#metrics = np.divide(varianza_classes, varianza_epoch_zero)
+    r1 = [format(x, 'f') for x in metric]
+    r1 = [float(x) for x in metric]
+    fields=[(index+1), r1]
+    with open('metrcis.csv', 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)
+
+metrics = np.divide(varianza_classes, varianza_epoch_zero)
 list_metrics = np.reshape(list_metrics, (-1, 10))
 print('list metrics ',list_metrics)
+param_layers = np.arange(1, (int(3)+1))
+print ('param_layers ', param_layers)
+
+
+#graph_metric([param_layers, param_layers,param_layers,param_layers,param_layers,param_layers,param_layers,param_layers,param_layers,param_layers], list_metrics, param_epoch)
+
+
+#arra = np.asarray(list_metrics)
+#a = np.array_str(arra, precision=6)
+#np.savetxt("metrcs_.csv", a, fmt = '%.6f', delimiter=",")
 
