@@ -37,17 +37,22 @@ def perceptron_plot(filename, layer, e, cant_input):
                 cont_error = cont_error +1
         errors.append(total_error*-1)
         mala_clasif.append(cont_error)
-        #print('cantidad de errores: ' + str(cont_error))
 
-    #print(mala_clasif)
-    #input('this_?')
     #fields=[layer, e, str(cont_total_input),np.amin(mala_clasif), mala_clasif]
+    #obtenemos el error minimo entre los epoch y su ubicacion-indice
     mn,idx = min((mala_clasif[i],i) for i in range(len(mala_clasif)))
-    fields=[layer, e, str(cont_total_input),mn, idx]
+    #vamos a calcular la metrica por el menor valor y por el utlimo valor de error en los epoch
+    error_minimo = mn/cont_total_input
+    error_ultimo_epoch = cont_error/cont_total_input
+    #cargamos los valores a escribir en el CSV
+    fields=[layer, e, str(cont_total_input),mn, idx, error_minimo,error_ultimo_epoch]
     with open('hidden_perceptron_error.csv', 'a') as f:
         writer = csv.writer(f)
         writer.writerow(fields)
+
     plt.plot(errors)
     plt.xlabel('Epoch')
     plt.ylabel('Total Loss')
     #plt.show()
+
+
