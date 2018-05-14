@@ -37,7 +37,10 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
             if layer==0:
                 model.add(Dense(int(cant_nodos[layer]), input_dim=int(cant_input),activation='sigmoid'))
             else:
-                model.add(Dense(int(cant_nodos[layer]), activation='sigmoid'))
+                if(layer!=indice_capas[-1]):
+                    model.add(Dense(int(cant_nodos[layer]), activation='relu'))
+                else:
+                    model.add(Dense(int(cant_nodos[layer]), activation='sigmoid'))
 
         print("Configuracion de la red: ", model.summary())
 
@@ -149,7 +152,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
 
 def get_activations (cant_nodos, cant_input, weights, activations):
     model = Sequential()
-    model.add(Dense(cant_nodos, input_dim=cant_input, weights=weights, activation='sigmoid'))
+    model.add(Dense(cant_nodos, input_dim=cant_input, weights=weights, activation='relu'))
     activations = model.predict_proba(activations)
     activations_array = np.asarray(activations)
     return activations_array
@@ -181,9 +184,9 @@ def save_activation (e, cant_nodos, activations, Y, layer, last_layer):
         
         split(open('hidden_'+str(layer) +'_activations.csv', 'r'));
         filename1 = 'output_1.csv'
-        filename2 = 'output_2.csv'
+        #filename2 = 'output_2.csv'
         perceptron_plot(filename1, layer, e,cant_nodos)
-        perceptron_plot(filename2, layer, e,cant_nodos)
+        #perceptron_plot(filename2, layer, e,cant_nodos)
         #input('continue?') 
     else:
         print("capa actual " + str(layer))
@@ -194,7 +197,7 @@ nro_capa = 1
 param_layers = 4
 param_layers = np.arange(1, (int(param_layers)+1))
 #param_epoch = input('cantidad epochs ')
-param_epoch= "0,200,1200"
+param_epoch= "0,800"
 #for i in np.arange(0,201,100):
 #    if(param_epoch==""):
 #        param_epoch = str(i)
@@ -212,7 +215,7 @@ param_nodos = param_nodos.split(',')
 batch_size = 100
 ###
 # load pima indians dataset
-dataset = np.loadtxt("pima-indians-diabetes.csv", delimiter=",")
+dataset = np.loadtxt("pima-indians-diabetes-train.csv", delimiter=",")
 #normalize the data
 scaler = StandardScaler()
 # split into input (X) and output (Y) variables
@@ -225,5 +228,6 @@ X_test = dataset[:,0:8]
 Y_test = dataset[:,8]
 #normalizar los valores del train set
 X = scaler.fit_transform(X)
+X_test = scaler.fit_transform(X_test)
 construct_train_nn(X, Y, param_input, param_layers, param_nodos, param_epoch, batch_size)
 
