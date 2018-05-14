@@ -9,6 +9,8 @@
 
 from keras.models import Sequential
 from keras.layers import Dense
+from keras.layers import Dropout
+from keras.optimizers import SGD
 from sklearn.preprocessing import StandardScaler
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import cross_val_score
@@ -16,12 +18,13 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
 import numpy as np
 import csv
 import os
 import pandas
 
-def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, batch=0):
+def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, batch=0, X_test = '', y_test =''):
     if os.path.isfile('hidden_perceptron_error.csv'):
         os.remove('hidden_perceptron_error.csv')
     indice_capas = np.arange((np.count_nonzero(cant_layers)))
@@ -33,18 +36,21 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
     desviation_epoch_zero = np.array([])
     desviation_epoch_one = np.array([])
     activations = []
+    #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.30, random_state=seed)
     for e in cant_epoch:
         #np.random.seed(14)
         e=int(e)
         model = Sequential()
         for layer in indice_capas:
             if layer==0:
-                model.add(Dense(int(cant_nodos[layer]), input_dim=int(cant_input),activation='sigmoid'))
+                model.add(Dense(int(cant_nodos[layer]), input_dim=int(cant_input),activation='relu'))
             else:
-                model.add(Dense(int(cant_nodos[layer]), activation='sigmoid'))
+                if(layer != indice_capas[-1]):
+                    model.add(Dense(int(cant_nodos[layer]), activation='relu'))
+                else:
+                    model.add(Dense(int(cant_nodos[layer]), activation='sigmoid'))
 
         print("Configuracion de la red: ", model.summary())
-
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         print("entrenando para ", e, " epochs")
         model.fit(X, Y, epochs=e, batch_size=int(batch))
@@ -53,9 +59,10 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
         prediction = model.predict_proba(X)
 
         # evaluate the model
-        scores = model.evaluate(X, Y)
+        scores = model.evaluate(X_test, y_test)
         print(scores)
-        acc = ("%.2f%%" % (scores[1]*100))
+        acc = ("%.2f%%" % (scores[1]*100))  
+        print('acc::: ', acc)
         row = str(e)+","+str(acc)
         fields=[str(e),str(acc)]
         # 'a' para agregar contenido al CSV
@@ -105,7 +112,7 @@ def construct_train_nn (X, Y, cant_input, cant_layers, cant_nodos, cant_epoch, b
 
 def get_activations (cant_nodos, cant_input, weights, activations):
     model = Sequential()
-    model.add(Dense(cant_nodos, input_dim=cant_input, weights=weights, activation='sigmoid'))
+    model.add(Dense(cant_nodos, input_dim=cant_input, weights=weights, activation='relu'))
     activations = model.predict_proba(activations)
     activations_array = np.asarray(activations)
     return activations_array
@@ -135,11 +142,11 @@ def save_activation (e, cant_nodos, activations, Y, layer, last_layer):
         with open('hidden_'+str(layer) +'_activations.csv', 'w') as file:
             file.write(filedata)
         
-        split(open('hidden_'+str(layer) +'_activations.csv', 'r'));
+        #split(open('hidden_'+str(layer) +'_activations.csv', 'r'));
         filename1 = 'output_1.csv'
         filename2 = 'output_2.csv'
-        perceptron_plot(filename1, layer, e,cant_nodos)
-        perceptron_plot(filename2, layer, e,cant_nodos)
+        #perceptron_plot(filename1, layer, e,cant_nodos)
+        #perceptron_plot(filename2, layer, e,cant_nodos)
         #input('continue?') 
     else:
         print("capa actual " + str(layer))
@@ -150,7 +157,7 @@ def save_activation (e, cant_nodos, activations, Y, layer, last_layer):
 param_layers = 2
 param_layers = np.arange(1, (int(param_layers)+1))
 
-param_epoch= "800"
+param_epoch= "100"
 print(param_epoch)
 param_epoch = param_epoch.split(',')
 
@@ -169,7 +176,7 @@ seed = 7
 np.random.seed(seed)
 
 # load dataset
-dataframe = pandas.read_csv("sonar.csv", header=None)
+dataframe = pandas.read_csv("sonar-train.csv", header=None)
 dataset = dataframe.values
 # split into input (X) and output (Y) variables
 X = dataset[:,0:60].astype(float)
@@ -180,10 +187,22 @@ encoder = LabelEncoder()
 encoder.fit(Y)
 encoded_Y = encoder.transform(Y)
 
+# load test dataset
+dataframes = pandas.read_csv("sonar-test.csv", header=None)
+datasets = dataframes.values
+# split into input (X) and output (Y) variables
+X_test = datasets[:,0:60].astype(float)
+Y_test = datasets[:,60]
+
+encodert = LabelEncoder()
+encodert.fit(Y_test)
+encoded_Y_test = encodert.transform(Y_test)
+
 #normalize the data
-scaler = StandardScaler()
+#scaler = StandardScaler()
 #normalizar los valores del train set
 #X = scaler.fit_transform(X)
+#X_test =  scaler.fit_transform(X_test)
 
-construct_train_nn(X, encoded_Y, param_input, param_layers, param_nodos, param_epoch, batch_size)
+construct_train_nn(X, encoded_Y, param_input, param_layers, param_nodos, param_epoch, batch_size, X_test, encoded_Y_test)
 
